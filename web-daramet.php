@@ -7,21 +7,21 @@
 
 // === Configuration Section ===
 // IP restriction for security
-$allowedIp = '__ALLOWED_IP__'; // replaced by installer
+$allowedIp = '{{ALLOWED_IP}}'; // replaced by installer
 if ($_SERVER['REMOTE_ADDR'] !== $allowedIp) {
     http_response_code(403);
     exit('Access denied. (git: dev30na)');
 }
 
 // === API credentials ===
-$apiToken = '__API_TOKEN__';     // replaced by installer
+$apiToken = '{{TOKEN}}';     // replaced by installer
 $apiUrl   = 'https://daramet.com/api/Donates/Messages';
 
 // === Database connection settings ===
-$dbHost = '__DB_HOST__';            // replaced by installer
-$dbUser = '__DB_USER__';            // replaced by installer
-$dbPass = '__DB_PASS__';            // replaced by installer
-$dbName = '__DB_NAME__';            // replaced by installer
+$dbHost = '{{DB_HOST}}';
+$dbName = '{{DB_NAME}}';
+$dbUser = '{{DB_USER}}';
+$dbPass = '{{DB_PASS}}';
 
 // === Customizable Wallet Update Settings ===
 $userTable    = '__USER_TABLE__';    // replaced by installer

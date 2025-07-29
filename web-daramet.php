@@ -1,8 +1,8 @@
 <?php
 /**
  * web-daramet.php
- * Daramet donation sync script
- * Installer-enabled, Coded by dev30na
+ * Daramet donation sync script (web version)
+ * Installer-enabled, coded by dev30na
  */
 
 // === Configuration Section ===
@@ -18,17 +18,17 @@ $apiToken = '{{TOKEN}}';     // replaced by installer
 $apiUrl   = 'https://daramet.com/api/Donates/Messages';
 
 // === Database connection settings ===
-$dbHost = '{{DB_HOST}}';
-$dbName = '{{DB_NAME}}';
-$dbUser = '{{DB_USER}}';
-$dbPass = '{{DB_PASS}}';
+$dbHost = '{{DB_HOST}}';     // replaced by installer
+$dbUser = '{{DB_USER}}';     // replaced by installer
+$dbPass = '{{DB_PASS}}';     // replaced by installer
+$dbName = '{{DB_NAME}}';     // replaced by installer
 
-// === Customizable Wallet Update Settings ===
-$userTable    = '__USER_TABLE__';    // replaced by installer
-$walletColumn = '__WALLET_COLUMN__'; // replaced by installer
-$userIdColumn = '__USER_ID_COLUMN__'; // replaced by installer
+// === Wallet Update Settings ===
+// Column names replaced by installer; e.g. userTable='users', userIdColumn='email', walletColumn='wallet'
+$userTable    = '__USER_TABLE__';
+$walletColumn = '__WALLET_COLUMN__';
+$userIdColumn = '__USER_ID_COLUMN__';
 
-// Connect to database
 $db = new mysqli($dbHost, $dbUser, $dbPass, $dbName);
 if ($db->connect_error) {
     die("DB Connection Failed: " . $db->connect_error);
@@ -49,25 +49,24 @@ if (!$response) {
     die("API Error: No response");
 }
 
-data = json_decode($response, true);
+$data = json_decode($response, true);
 if (!is_array($data)) {
     die("Invalid API response");
 }
 
 // === Process each donation ===
 foreach ($data as $donation) {
-    $donate_id   = $donation['donator_data']['id'];
-    $message     = trim($donation['donator_data']['message']);
-    $amountRial  = intval($donation['donator_data']['amount']);
-    $timestamp   = $donation['donator_data']['timestamp'];
+    $donate_id  = $donation['donator_data']['id'];
+    $email      = trim($donation['donator_data']['message']);
+    $amountRial = intval($donation['donator_data']['amount']);
+    $timestamp  = $donation['donator_data']['timestamp'];
 
-    // Only numeric messages as user IDs
-    if (!ctype_digit($message)) {
+    // Only accept valid email addresses
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         continue;
     }
-    $userid = $message;
 
-    // Skip already-processed donations
+    // Skip duplicates
     $check = $db->prepare("SELECT 1 FROM donation_logs WHERE donate_id = ?");
     $check->bind_param("s", $donate_id);
     $check->execute();
@@ -79,23 +78,25 @@ foreach ($data as $donation) {
     // Convert Rial to Toman
     $amountToman = intval($amountRial / 10);
 
-    // Update user's wallet
+    // Update user's wallet by ((email))
     $update = $db->prepare(
-        "UPDATE {$userTable} SET {$walletColumn} = {$walletColumn} + ? WHERE {$userIdColumn} = ?"
+        "UPDATE {$userTable}
+         SET {$walletColumn} = {$walletColumn} + ?
+         WHERE {$userIdColumn} = ?"
     );
-    $update->bind_param("ii", $amountToman, $userid);
+    $update->bind_param("is", $amountToman, $email);
     $update->execute();
     if ($update->affected_rows <= 0) {
-        // User not found
+        // No matching user with that email
         continue;
     }
 
-    // Log donation into database
+    // Log donation in database
     $created_at = date("Y-m-d H:i:s", $timestamp);
     $insert = $db->prepare(
         "INSERT INTO donation_logs (donate_id, userid, amount, created_at)
          VALUES (?, ?, ?, ?)"
     );
-    $insert->bind_param("siis", $donate_id, $userid, $amountToman, $created_at);
+    $insert->bind_param("ssis", $donate_id, $email, $amountToman, $created_at);
     $insert->execute();
 }

@@ -17,7 +17,7 @@ This PHP script helps you automatically fetch donation transactions from the Dar
 * Amount conversion from Rial to Toman
 * Increment user wallet balance by user ID
 * IP-based access control (only server IP allowed)
-* Chatbot extracts ID
+* Bot extracts ID
 * Site extracts email
 ---
 

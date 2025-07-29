@@ -25,7 +25,7 @@ read -p "Enter full install path (e.g., /var/www/html/web-daramet.php): " instal
 
 
 echo "⬇️ Downloading PHP script..."
-curl -sL "https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/web-daramet.php" -o "$installPath"
+curl -sL "https://raw.githubusercontent.com/dev30na/daramet-donation-sync/main/web-daramet.php" -o "$installPath"
 
 
 if [ ! -f "$installPath" ]; then

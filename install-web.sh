@@ -1,49 +1,64 @@
 #!/bin/bash
 
-# Developer: dev30na
-# Bash Installer for Daramet Donation Sync
+set -euo pipefail
 
-echo -e "\n\033[1;34m--- Daramet Donation Sync Installer by dev30na ---\033[0m\n"
-
-
-read -p "Enter your Daramet API token: " apiToken
+echo "🔧 Starting Donation Script Installer..."
 
 
-read -p "Enter MySQL host (default: localhost): " dbHost
-dbHost=${dbHost:-localhost}
+read -p "Enter your Daramet API token: " token
 
-read -p "Enter MySQL database name: " dbName
-read -p "Enter MySQL username: " dbUser
-read -sp "Enter MySQL password: " dbPass
+
+read -p "Database host (e.g., localhost): " dbHost
+read -p "Database name: " dbName
+read -p "Database username: " dbUser
+read -s -p "Database password: " dbPass
 echo
 
 
-read -p "Enter installation path (default: /var/www/html/pay): " installPath
-installPath=${installPath:-/var/www/html/pay}
+read -p "User table name: " userTable
+read -p "Wallet column name: " walletColumn
+read -p "User ID column name: " userIdColumn
 
 
-allowedIp=$(hostname -I | awk '{print $1}')
+read -p "Enter full install path (e.g., /var/www/html/web-daramet.php): " installPath
 
 
-mkdir -p "$installPath"
-chmod -R 755 "$installPath"
+if [ ! -f "$installPath" ]; then
+    echo "❌ File not found: $installPath"
+    exit 1
+fi
 
 
-echo -e "\nDownloading PHP script..."
-curl -sLo "$installPath/web-daramet.php" "https://raw.githubusercontent.com/dev30na/daramet-donation-sync/main/web-daramet.php"
+allowedIp=$(curl -s https://api.ipify.org)
 
 
-sed -i "s|{{TOKEN}}|$apiToken|g" "$installPath/web-daramet.php"
-sed -i "s|{{DB_HOST}}|$dbHost|g" "$installPath/web-daramet.php"
-sed -i "s|{{DB_NAME}}|$dbName|g" "$installPath/web-daramet.php"
-sed -i "s|{{DB_USER}}|$dbUser|g" "$installPath/web-daramet.php"
-sed -i "s|{{DB_PASS}}|$dbPass|g" "$installPath/web-daramet.php"
-sed -i "s|{{INSTALL_PATH}}|$installPath|g" "$installPath/web-daramet.php"
-sed -i "s|{{ALLOWED_IP}}|$allowedIp|g" "$installPath/web-daramet.php"
+sed -i "s|{{TOKEN}}|$token|g" "$installPath"
+sed -i "s|{{DB_HOST}}|$dbHost|g" "$installPath"
+sed -i "s|{{DB_NAME}}|$dbName|g" "$installPath"
+sed -i "s|{{DB_USER}}|$dbUser|g" "$installPath"
+sed -i "s|{{DB_PASS}}|$dbPass|g" "$installPath"
+sed -i "s|__USER_TABLE__|$userTable|g" "$installPath"
+sed -i "s|__WALLET_COLUMN__|$walletColumn|g" "$installPath"
+sed -i "s|__USER_ID_COLUMN__|$userIdColumn|g" "$installPath"
+sed -i "s|{{ALLOWED_IP}}|$allowedIp|g" "$installPath"
+
+echo "✅ Values replaced in $installPath"
 
 
-(crontab -l 2>/dev/null; echo "*/5 * * * * php $installPath/web-daramet.php") | crontab -
+mysql -h "$dbHost" -u "$dbUser" -p"$dbPass" "$dbName" <<SQL
+CREATE TABLE IF NOT EXISTS donation_logs (
+    donate_id VARCHAR(255) PRIMARY KEY,
+    userid VARCHAR(255) NOT NULL,
+    amount INT NOT NULL,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SQL
 
-echo -e "\n\033[1;32m✅ Installation completed successfully!\033[0m"
-echo -e "Installed at: \033[1;33m$installPath/web-daramet.php\033[0m"
-echo -e "Allowed IP: \033[1;36m$allowedIp\033[0m"
+echo "📦 Table 'donation_logs' ensured."
+
+
+(crontab -l 2>/dev/null; echo "*/5 * * * * php $installPath >/dev/null 2>&1") | crontab -
+echo "⏰ Cron job added."
+
+echo "🎉 Installation complete. Your donation sync is ready."
+echo "Coded BY dev30na <3"

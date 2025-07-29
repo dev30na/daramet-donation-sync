@@ -20,11 +20,16 @@ read -p "Wallet column name: " walletColumn
 read -p "User ID column name: " userIdColumn
 
 
+
 read -p "Enter full install path (e.g., /var/www/html/web-daramet.php): " installPath
 
 
+echo "⬇️ Downloading PHP script..."
+curl -sL "https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/web-daramet.php" -o "$installPath"
+
+
 if [ ! -f "$installPath" ]; then
-    echo "❌ File not found: $installPath"
+    echo "❌ Download failed! Could not find $installPath"
     exit 1
 fi
 

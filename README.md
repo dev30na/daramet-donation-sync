@@ -21,7 +21,7 @@
 
 ---
 
-## ⚙️ مراحل راه‌اندازی (قبل نصب جدول دیتابیس ساخته شود)
+## ⚙️ مراحل راه‌اندازی
 
 ```bash
 bash <(curl -sSL https://raw.githubusercontent.com/dev30na/daramet-donation-sync/main/install-web.sh)
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS donation_logs (
     created_at DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
-> با این کد حتما جدول رو بسازید قبل نصب !
+> با این کد میتوانید دستی جدول را بسازید !
 
 ## 📬 گزارش‌دهی به تلگرام (نسخه ربات فقط)
 

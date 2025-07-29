@@ -1,24 +1,19 @@
 <?php
 // Access IP (sec xDDD)
- $allowedIp = '1.1.1.1'; //your IP Host our Server
+$allowedIp = '{{ALLOWED_IP}}'; //your IP Host our Server
 if ($_SERVER['REMOTE_ADDR'] !== $allowedIp) {
     http_response_code(403);
     exit('Access denied. (git: dev30na)');
-} 
-
-// Debug
-/* ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL); */
+}
 
 // Main Config
-$apiToken    = "111111111111111111111111111111111111111111"; // api ID https://daramet.com
+$apiToken    = "{{TOKEN}}"; // api ID https://daramet.com
 $apiUrl      = "https://daramet.com/api/Donates/Messages"; // dont touch
-$botToken    = "6059505151:AAGvlZL0O9aF2z-dEM5OVFSpc_Wjtdn6Npg"; // Token telegram bot
-$adminChatId = "-1001111111111";  // Admin Log (GP ID & Admin ID & Channel ID) !Only Number!
+$botToken    = "{{BOT_TOKEN}}"; // Token telegram bot
+$adminChatId = "{{ADMIN_CHAT_ID}}";  // Admin Log (GP ID & Admin ID & Channel ID)
 
 // CONFIG DATABASE
-$db = new mysqli("localhost", "v94lFK3VPe1dLA", "tDMoBblD7JTwug", "wizwiz"); // Set your database
+$db = new mysqli("{{DB_HOST}}", "{{DB_USER}}", "{{DB_PASS}}", "{{DB_NAME}}");
 if ($db->connect_error) {
     die("DB Connection Failed: " . $db->connect_error);
 }
@@ -86,7 +81,7 @@ foreach ($data as $donation) {
     $amountToman = intval($amountRial / 10);
 
     // Added to wallet
-    $update = $db->prepare("UPDATE users SET wallet = wallet + ? WHERE userid = ?");
+    $update = $db->prepare("UPDATE {{USER_TABLE}} SET {{WALLET_COLUMN}} = {{WALLET_COLUMN}} + ? WHERE {{USER_ID_COLUMN}} = ?");
     $update->bind_param("ii", $amountToman, $userid);
     $update->execute();
     if ($update->affected_rows <= 0) {
@@ -96,10 +91,10 @@ foreach ($data as $donation) {
 
     // Added to log in database
     $created_at = date("Y-m-d H:i:s", $timestamp);
-    $insert = $db->prepare("
-        INSERT INTO donation_logs (donate_id, userid, amount, created_at)
-        VALUES (?, ?, ?, ?)
-    ");
+    $insert = $db->prepare(
+        "INSERT INTO donation_logs (donate_id, userid, amount, created_at)
+         VALUES (?, ?, ?, ?)"
+    );
     $insert->bind_param("siis", $donate_id, $userid, $amountToman, $created_at);
     $insert->execute();
 
@@ -112,9 +107,8 @@ foreach ($data as $donation) {
     sendTelegram($adminChatId, $adminMsg);
 
     // Log User
-$userMsg = "🎉 درود!\n"
-         . "💳 مبلغ <b>{$amountToman} تومان</b> به کیف پول شما افزوده شد.\n\n"
-         . "🛒 برای نهایی کردن خرید خود، هنگام پرداخت دکمه «پرداخت از کیف پول» را بزنید.";
-sendTelegram($userid, $userMsg);
+    $userMsg = "🎉 درود!\n"
+             . "💳 مبلغ <b>{$amountToman} تومان</b> به کیف پول شما افزوده شد.\n\n"
+             . "🛒 برای نهایی کردن خرید خود، هنگام پرداخت دکمه «پرداخت از کیف پول» را بزنید.";
+    sendTelegram($userid, $userMsg);
 }
-?>

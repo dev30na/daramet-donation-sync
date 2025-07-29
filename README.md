@@ -63,3 +63,5 @@ CREATE TABLE IF NOT EXISTS donation_logs (
  توسعه‌ داده شده با ❤️
 
 
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/dev30na/daramet-donation-sync.svg?variant=adaptive)](https://starchart.cc/dev30na/daramet-donation-sync)
